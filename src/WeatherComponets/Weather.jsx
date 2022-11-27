@@ -1,19 +1,30 @@
 import "./weather.css";
 import React, { useEffect, useState } from "react";
-import { FormatAlignCenter } from "@mui/icons-material";
 
 export default function Weather() {
-  const [weather, setWeather] = useState({});
-  const [locations, setLocations] = useState([]);
+  const [weatherData, setWeather] = useState({});
+  const [locations, setLocations] = useState("");
 
   useEffect(() => {
-    cloud();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        cloud(`${latitude}/${longitude}`);
+      });
+    } else {
+      alert("Geolocation not available");
+    }
   }, []);
 
-  function cloud() {
-    fetch(
-      `http://api.openweathermap.org/data/2.5/weather?q=${locations}&units=metric&APPID=1458ec41da2032f844e3e770089c25f9`
-    )
+  function cloud(latLong) {
+    const url = !latLong.includes("/")
+      ? `https://api.openweathermap.org/data/2.5/weather?q=${latLong}&units=metric&APPID=1458ec41da2032f844e3e770089c25f9`
+      : `https://api.openweathermap.org/data/2.5/weather?lat=${
+          latLong.split("/")[0]
+        }&lon=${
+          latLong.split("/")[1]
+        }&units=metric&APPID=1458ec41da2032f844e3e770089c25f9`;
+    fetch(url)
       .then((res) => {
         if (res.ok) {
           console.log(res.status);
@@ -23,11 +34,7 @@ export default function Weather() {
           }
         }
       })
-      .then((object) => {
-        setWeather(object);
-
-        console.log(weather);
-      });
+      .then((object) => setWeather(object));
   }
 
   return (
@@ -35,35 +42,52 @@ export default function Weather() {
       <div className="weather">
         <div className="container">
           <div className="weatherInput">
+            <div className="country">
+              <span className="cou">{weatherData?.sys?.country}</span>
+            </div>
             <input
               type="text"
               name="display"
               value={locations}
-              onChange={(e) => setLocations(e.target.value)}
-              onLoad={fetch(
-                "https://api.openweathermap.org/data/2.5/weather?q=Nigeria&appid=1458ec41da2032f844e3e770089c25f9"
-              )}
+              onChange={(e) => {
+                setLocations(e.target.value);
+                cloud(e.target.value);
+              }}
               id="input_weather"
               spellCheck="false"
-              onKeyPress={cloud}
             />
-          </div>
 
-          <div className="main">
-            <div className="degree">
-              <FormatAlignCenter
-                className="form
-              t"
-              />
-              <span className="deg">
-                {" "}
-                {weather?.main?.temp}
-                °C
-              </span>
-              <FormatAlignCenter className="format1" />
-            </div>
-            <div className="country">
-              <span className="cou">{weather?.sys?.country}</span>
+            <div className="main">
+              <div className="degree">
+                <img
+                  src={`https://openweathermap.org/img/w/${
+                    weatherData.weather ? weatherData.weather[0].icon : "10d"
+                  }.png`}
+                  alt="wthr img"
+                />
+
+                <span className="deg">
+                  {weatherData?.main?.temp}
+                  °C
+                </span>
+                <img
+                  src={`https://openweathermap.org/img/w/${
+                    weatherData.weather ? weatherData.weather[0].icon : "10d"
+                  }.png`}
+                />
+              </div>
+              <div className="Weather_condition">
+                {console.log(weatherData)}
+                {weatherData.weather && weatherData.weather[0].description}
+                <div className="outer"></div>
+                <div className="outer">
+                  Pressure: {weatherData?.main?.pressure}
+                </div>
+                <div className="outer">
+                  Humidity: {weatherData?.main?.humidity}
+                </div>
+                <div className="outer">Timezone: {weatherData?.timezone}</div>
+              </div>
             </div>
           </div>
         </div>

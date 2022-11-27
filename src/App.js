@@ -1,5 +1,6 @@
 import React from "react";
-import Weather from "./WeatherComponets/Weather";
+import Weather from "./WeatherComponets/WeatherClass";
+// import Weather from "./WeatherComponets/Weather";
 
 function App() {
   return (
